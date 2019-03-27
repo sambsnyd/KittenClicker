@@ -25,16 +25,16 @@ function observeCelestialEvents(game) {
 }
 
 // If the specified resource is 99% at capacity, refine it into the specified refineTo target
-function refineResourceIfMax(game, resourceName, refineTo) {
+function refineResourceIfMax(game, resourceName, refineTo, craftQuantity=1) {
     var resource = getResource(game, resourceName)
     var percentFull = resource.value / resource.maxValue
     if(percentFull >= 0.99) {
-        var craftedSuccessfully = game.workshop.craft(refineTo, 1)
+        var craftedSuccessfully = game.workshop.craft(refineTo, craftQuantity)
     }
 }
 
-function refineResource(game, resourceName, refineTo) {
-    game.workshop.craft(refineTo, 1)
+function refineResource(game, resourceName, refineTo, craftQuantity=1) {
+    game.workshop.craft(refineTo, craftQuantity)
 }
 
 function spendCatpower(game) {
@@ -58,7 +58,7 @@ function main() {
     observeCelestialEvents(game)
     spendCatpower(game)
     spendGold(game)
-    refineResourceIfMax(game, "catnip", "wood")
+    refineResourceIfMax(game, "catnip", "wood", 100)
     refineResourceIfMax(game, "wood", "beam")
     refineResourceIfMax(game, "minerals", "slab")
     refineResourceIfMax(game, "iron", "plate")
