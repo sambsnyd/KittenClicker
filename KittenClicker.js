@@ -47,9 +47,20 @@ function spendCatpower() {
     }
 }
 
+function spendGold() {
+    var gold = getResource("gold")
+    if(gold.value / gold.maxValue >= 0.99) {
+        var game = window.wrappedJSObject.game 
+        var tradingPartner = game.diplomacy.get("zebras")
+        game.diplomacy.tradeMultiple(tradingPartner, 1)
+    }
+}
+
 function main() {
+    
     observeCelestialEvents()
     spendCatpower()
+    spendGold()
     refineResourceIfMax("catnip", "wood")
     refineResourceIfMax("wood", "beam")
     refineResourceIfMax("minerals", "slab")
@@ -57,7 +68,9 @@ function main() {
     refineResourceIfMax("coal", "steel")
     refineResource("furs", "parchment")
     refineResourceIfMax("culture", "manuscript")
-    refineResourceIfMax("science", "compendium")
+    // This mispelling of "compendium" matches the source code in the game 
+    // It must be mispelled here to work correctly. 
+    refineResourceIfMax("science", "compedium")
 }
 
 setInterval(main, 500)
