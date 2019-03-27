@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "KittenClicker",
+  "version": "1.0",
+
+  "description": "Clicks things in the kitten clicker game",
+
+  "icons": {
+    "48": "icons/kitten-48.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://bloodrizer.ru/games/kittens/*"],
+      "js": ["KittenClicker.js"]
+    }
+  ]
+}
