@@ -15,9 +15,6 @@ function findIt(arr, predicate) {
 function getResource(game, name) {
     return findIt(game.resPool.resources, it => it.name === name || it.title === name)
 }
-function getBuilding(game, name) {
-    return findIt(game.bld.buildingsData, it => it.name === name || it.label === name)
-}
 
 // If the "Observe the Sky" button pops up, click it
 function observeAstronomicalEvents(game) {
@@ -54,8 +51,36 @@ function dispatchTraders(game, race) {
     }
 }
 
+// Parchment is "abundant" when there's enough that crafting a manuscript would still leave enough parchment to spend on a chapel or amphitheatre, whichever of the two is more expensive 
+function refineManuscriptWhenParchmentAbundant(game) {
+    var resource = getResource(game, "culture")
+    var percentFull = resource.value / resource.maxValue
+    if(percentFull >= 0.99) {
+        var chapelParchmentCost = findIt(game.bld.getPrices("chapel"), it => it.name === "parchment")
+        var amphitheatreParchmentCost = findIt(game.bld.getPrices("amphitheatre"), it => it.name === "parchment")
+        var currentParchment = getResource(game, "parchment")
+        if(currentParchment > Math.max(chapelParchmentCost,amphitheatreParchmentCost) + 25) {
+            game.workshop.craft("manuscript", 1)
+        }
+    }
+}
+
+function restyle() {
+    var toolbarIcons = document.getElementsByClassName("toolbarIcon")
+    for(var i = 0; i < toolbarIcons.length; i++) {
+        // The power display is hard to read, give it a glow to make it stand out from the black background 
+        if(toolbarIcons[i].style.color === "green") {
+            toolbarIcons[i].style.textShadow = "0px 1px 1px #fff, 1px 0px 1px #fff, 0px -1px 1px #fff, -1px 0px 1px #fff"
+        }
+    }
+}
+
 function main() {
     var game = window.wrappedJSObject.game
+    if(game === null) {
+        // Game hasn't fully loaded yet, nothing to do
+        return
+    }
     observeAstronomicalEvents(game)
     dispatchHunters(game)
     dispatchTraders(game, "zebras")
@@ -65,13 +90,17 @@ function main() {
     refineResourceIfMax(game, "iron", "plate")
     refineResourceIfMax(game, "coal", "steel")
     refineResource(game, "furs", "parchment")
-    refineResourceIfMax(game, "culture", "manuscript")
+    refineManuscriptWhenParchmentAbundant(game)
     // This mispelling of "compendium" matches the source code in the game
     // It must be mispelled here to work correctly.
     refineResourceIfMax(game, "science", "compedium")
     refineResourceIfMax(game, "titanium", "alloy")
     refineResourceIfMax(game, "oil", "kerosene")
+
+    restyle()
 }
 
-setInterval(main, 500)
-console.log("KittenClicker loaded and running")
+window.onload = function() {
+    setInterval(main, 500)
+    console.log("KittenClicker loaded and running")
+}
