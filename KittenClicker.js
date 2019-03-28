@@ -56,9 +56,9 @@ function refineManuscriptWhenParchmentAbundant(game) {
     var resource = getResource(game, "culture")
     var percentFull = resource.value / resource.maxValue
     if(percentFull >= 0.99) {
-        var chapelParchmentCost = findIt(game.bld.getPrices("chapel"), it => it.name === "parchment")
-        var amphitheatreParchmentCost = findIt(game.bld.getPrices("amphitheatre"), it => it.name === "parchment")
-        var currentParchment = getResource(game, "parchment")
+        var chapelParchmentCost = findIt(game.bld.getPrices("chapel"), it => it.name === "parchment").val
+        var amphitheatreParchmentCost = findIt(game.bld.getPrices("amphitheatre"), it => it.name === "parchment").val
+        var currentParchment = getResource(game, "parchment").value
         if(currentParchment > Math.max(chapelParchmentCost,amphitheatreParchmentCost) + 25) {
             game.workshop.craft("manuscript", 1)
         }
