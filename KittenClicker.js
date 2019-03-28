@@ -1,5 +1,7 @@
+// Primary purpose of this simple clicker is to prevent resources from reaching their cap and having production go to waste
 
-// Arrays reached via wrappedJSObject throw access denied exceptions if you try to call their find() method 
+
+// Arrays reached via wrappedJSObject throw access denied exceptions if you try to call their find() method
 // This likely has something to do with how Firefox sandboxes objects accessed via wrappedJSObject
 function findIt(arr, predicate) {
     for(var i = 0; i < arr.length; i++) {
@@ -7,18 +9,18 @@ function findIt(arr, predicate) {
             return arr[i];
         }
     }
-    return null; 
+    return null;
 }
 
 function getResource(game, name) {
-    return findIt(game.resPool.resources, it => it.name === name || it.title === name) 
+    return findIt(game.resPool.resources, it => it.name === name || it.title === name)
 }
 function getBuilding(game, name) {
     return findIt(game.bld.buildingsData, it => it.name === name || it.label === name)
 }
 
-// If the "Observe the Sky" button pops up, click it 
-function observeCelestialEvents(game) {
+// If the "Observe the Sky" button pops up, click it
+function observeAstronomicalEvents(game) {
     if(game.calendar.observeRemainingTime > 0) {
         game.calendar.observeHandler()
     }
@@ -37,27 +39,26 @@ function refineResource(game, resourceName, refineTo, craftQuantity=1) {
     game.workshop.craft(refineTo, craftQuantity)
 }
 
-function spendCatpower(game) {
+function dispatchHunters(game) {
     var catpower = getResource(game, "catpower")
     if(catpower.value / catpower.maxValue >= 0.99) {
         game.village.huntMultiple(1)
     }
 }
 
-function spendGold(game) {
+function dispatchTraders(game, race) {
     var gold = getResource(game, "gold")
     if(gold.value / gold.maxValue >= 0.99) {
-        
-        var tradingPartner = game.diplomacy.get("zebras")
+        var tradingPartner = game.diplomacy.get(race)
         game.diplomacy.tradeMultiple(tradingPartner, 1)
     }
 }
 
 function main() {
-    var game = window.wrappedJSObject.game 
-    observeCelestialEvents(game)
-    spendCatpower(game)
-    spendGold(game)
+    var game = window.wrappedJSObject.game
+    observeAstronomicalEvents(game)
+    dispatchHunters(game)
+    dispatchTraders(game, "zebras")
     refineResourceIfMax(game, "catnip", "wood", 100)
     refineResourceIfMax(game, "wood", "beam")
     refineResourceIfMax(game, "minerals", "slab")
@@ -65,8 +66,8 @@ function main() {
     refineResourceIfMax(game, "coal", "steel")
     refineResource(game, "furs", "parchment")
     refineResourceIfMax(game, "culture", "manuscript")
-    // This mispelling of "compendium" matches the source code in the game 
-    // It must be mispelled here to work correctly. 
+    // This mispelling of "compendium" matches the source code in the game
+    // It must be mispelled here to work correctly.
     refineResourceIfMax(game, "science", "compedium")
     refineResourceIfMax(game, "titanium", "alloy")
     refineResourceIfMax(game, "oil", "kerosene")
