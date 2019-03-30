@@ -59,10 +59,43 @@ function dispatchHunters(game) {
     }
 }
 
-function dispatchTraders(game, race) {
+function spendGold(game, desiredResource) {
     var gold = getResource(game, "gold")
     if(gold.value / gold.maxValue >= 0.99) {
-        var tradingPartner = game.diplomacy.get(race)
+        var tradingPartnerName // = game.diplomacy.get(race)
+        switch(desiredResource) {
+            case "promote kittens":
+                game.village.promoteKittens()
+                return;
+            case "wood":
+                tradingPartnerName = "lizards"
+                break;
+            case "catnip":
+                tradingPartnerName = "sharks"
+                break;
+            case "iron":
+                tradingPartnerName = "griffins"
+                break;
+            case "minerals":
+                tradingPartnerName = "nagas"
+                break;
+            case "titanium":
+                // Zebras trade for 50 slabs, attempt to craft them
+                var craftQuantity = Math.ceil(50 / game.getCraftRatio())
+                var succeeded = game.workshop.craft("slab", craftQuantity)
+                tradingPartnerName = "zebras"
+                break;
+            case "coal":
+                // Spiders trade for 50 scaffolds, attempt to craft them
+                var craftQuantity = Math.ceil(50 / game.getCraftRatio())
+                var succeeded = game.workshop.craft("scaffold", craftQuantity)
+                tradingPartnerName = "spiders"
+                break;
+            case "uranium":
+                tradingPartnerName = "dragons"
+                break;
+        }
+        var tradingPartner = game.diplomacy.get(tradingPartnerName)
         game.diplomacy.tradeMultiple(tradingPartner, 1)
     }
 }
@@ -80,7 +113,7 @@ function praiseTheSun(game) {
 function restyle() {
     var toolbarIcons = document.getElementsByClassName("toolbarIcon")
     for(var i = 0; i < toolbarIcons.length; i++) {
-        // The power display is hard to read, give it a glow to make it stand out from the black background 
+        // The power display is hard to read, give it a glow to make it stand out from the black background
         if(toolbarIcons[i].style.color === "green") {
             toolbarIcons[i].style.textShadow = "0px 1px 1px #fff, 1px 0px 1px #fff, 0px -1px 1px #fff, -1px 0px 1px #fff"
         }
@@ -119,7 +152,7 @@ function createControlPanel() {
     var heading = document.createElement("b")
     heading.innerText = "Auto Refinement Controls ▼"
     heading.style.cursor="pointer"
-    heading.addEventListener("click", function(){ 
+    heading.addEventListener("click", function(){
         var conversionControls = document.getElementById("conversionControls")
         if(conversionControls.style.display === "none") {
             heading.innerText = "Auto Refinement Controls ▼"
@@ -141,6 +174,26 @@ function createControlPanel() {
     conversionControls.appendChild(createConversionCheckbox("coal 🡒 <span style='color:gray'>steel</span> ", "coal"))
     conversionControls.appendChild(createConversionCheckbox("iron 🡒 plate ", "iron"))
     conversionControls.appendChild(createConversionCheckbox("titanum 🡒 <span style='color:gray'>alloy</span> ", "titanium"))
+
+
+    console.log("adding gold refine options")
+    var goldRefineContainer = document.createElement("p")
+    goldRefineContainer.style.textAlign = "right"
+    goldRefineContainer.innerHTML = "gold 🡒 "
+
+    var goldSelect = document.createElement("select")
+    goldSelect.id = "goldSelect"
+    var goldRefineOptions = ["promote kittens", "wood","catnip","iron","minerals","titanium","coal","uranium"]
+    for(var i in goldRefineOptions) {
+        var goldOptionElement = document.createElement("option")
+        goldOptionElement.value = goldRefineOptions[i]
+        goldOptionElement.text = goldRefineOptions[i]
+        goldSelect.appendChild(goldOptionElement)
+    }
+
+    goldRefineContainer.appendChild(goldSelect)
+    conversionControls.appendChild(goldRefineContainer)
+
     conversionControls.appendChild(createConversionCheckbox("oil 🡒 kerosene ", "oil"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#4EA24E'>uranium</span> 🡒 <span style='color:#4EA24E'>thorium</span>", "uranium"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#A00000'>unobtainium</span> 🡒 <span style='color:#A00000'>eludium</span>", "unobtainium"))
@@ -171,7 +224,7 @@ function createControlPanel() {
     scienceSelect.appendChild(idleOption)
     scienceRefineContainer.appendChild(scienceSelect)
     conversionControls.appendChild(scienceRefineContainer)
-    
+
     conversionControls.appendChild(createConversionCheckbox("<span style='color:gray'>faith</span> 🡒 praise", "faith"))
     panel.appendChild(conversionControls)
 
@@ -182,7 +235,9 @@ function main() {
     var game = window.wrappedJSObject.game
     observeAstronomicalEvents(game)
     dispatchHunters(game)
-    dispatchTraders(game, "zebras")
+    var goldSelect = document.getElementById("goldSelect")
+    var selectedGoldTarget = goldSelect.options[goldSelect.selectedIndex].value
+    spendGold(game, selectedGoldTarget)
     praiseTheSun(game)
     refineResourceIfMax(game, "catnip", "wood")
     refineResourceIfMax(game, "wood", "beam")
@@ -215,10 +270,6 @@ function main() {
 }
 
 window.onload = function() {
-    if(window.wrappedJSObject.game === null) {
-        // Game hasn't fully loaded yet, nothing to do
-        return
-    }
     createControlPanel()
     setInterval(main, 500)
     console.log("KittenClicker loaded and running")
