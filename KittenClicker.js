@@ -59,36 +59,6 @@ function dispatchTraders(game, race) {
     }
 }
 
-// Parchment is "abundant" when there's enough that crafting a manuscript would still leave enough parchment to spend on a chapel or amphitheatre, whichever of the two is more expensive
-function refineManuscriptWhenParchmentAbundant(game) {
-    var resource = getResource(game, "culture")
-    var percentFull = resource.value / resource.maxValue
-    if(percentFull >= 0.99) {
-        var chapelParchmentCost = findIt(game.bld.getPrices("chapel"), it => it.name === "parchment").val
-        // If amphitheatre has been replaced by broadcast towers, there is no assosciated parchment cost so default to 0
-        var amphitheatreParchmentCost = findIt(game.bld.getPrices("amphitheatre"), it => it.name === "parchment", {val:0}).val
-        var currentParchment = getResource(game, "parchment").value
-        if(currentParchment > Math.max(chapelParchmentCost,amphitheatreParchmentCost) + 25) {
-            game.workshop.craft("manuscript", 1)
-        }
-    }
-}
-
-function refineScience(game) {
-    var resource = getResource(game, "science")
-    var percentFull = resource.value / resource.maxValue
-    if(percentFull >= 0.99) {
-        // This mispelling of "compendium" matches the source code in the game
-        // It must be mispelled here to work correctly.
-        var compendiumCrafted = game.workshop.craft("compedium", 1)
-        // If there aren't enough manuscripts for more compendiums,
-        // maybe we've stockpiled enough compendiums to make some blueprints
-        if(!compendiumCrafted) {
-            game.workshop.craft("blueprint", 1)
-        }
-    }
-}
-
 function praiseTheSun(game) {
     var resource = getResource(game, "faith")
     var percentFull = resource.value / resource.maxValue
@@ -187,8 +157,11 @@ function main() {
     refineResourceIfMax(game, "iron", "plate")
     refineResourceIfMax(game, "coal", "steel")
     refineResource(game, "furs", "parchment")
-    refineManuscriptWhenParchmentAbundant(game)
-    refineScience(game)
+    refineResourceIfMax(game, "culture", "manuscript")
+    // This mispelling of "compendium" matches the source code in the game
+    // It must be mispelled here to work correctly.
+    refineResourceIfMax(game, "science", "compedium")
+    refineResourceIfMax(game, "science", "blueprint")
     refineResourceIfMax(game, "titanium", "alloy")
     refineResourceIfMax(game, "oil", "kerosene")
     refineResourceIfMax(game, "uranium", "thorium")
