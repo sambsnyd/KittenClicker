@@ -12,9 +12,12 @@ function findIt(arr, predicate, defaultWhenMissing = null) {
     return defaultWhenMissing;
 }
 
-function getResource(game, name) {
-    return findIt(game.resPool.resources, it => it.name === name || it.title === name)
+function getResource(game, resourceName) {
+    return findIt(game.resPool.resources, it => it.name === resourceName || it.title === resourceName)
 }
+
+// Per the wiki there are 5 ticks per second http://bloodrizer.ru/games/kittens/wiki/index.php?page=Game+Mechanics
+const ticksPerSecond = 5
 
 // If the "Observe the Sky" button pops up, click it
 function observeAstronomicalEvents(game) {
@@ -24,12 +27,17 @@ function observeAstronomicalEvents(game) {
 }
 
 // If the specified resource is 99% at capacity, refine it into the specified refineTo target
-function refineResourceIfMax(game, resourceName, refineTo, craftQuantity=1) {
+function refineResourceIfMax(game, resourceName, refineTo) {
     var resource = getResource(game, resourceName)
     var percentFull = resource.value / resource.maxValue
     var enabledCheckbox = document.getElementById(`${resourceName}ConversionCheckbox`)
     var enabled = ( enabledCheckbox ? enabledCheckbox.checked : true)
     if(percentFull >= 0.99 && enabled) {
+        // If we produce more resources in a second than are consumed by a single refinement,
+        // refine one second's worth of resource production
+        var refinementCost = findIt(game.workshop.getCraft(refineTo).prices, it => it.name === resourceName).val
+        var resourcePerSecond = resource.perTickCached * ticksPerSecond
+        var craftQuantity = Math.ceil(resourcePerSecond / refinementCost)
         var craftedSuccessfully = game.workshop.craft(refineTo, craftQuantity)
     }
 }
@@ -82,13 +90,15 @@ function restyle() {
 function createConversionCheckbox(label, resourceName) {
     var container = document.createElement("p")
     container.style.textAlign = "right"
-    container.innerHTML = label
+    var labelElement = document.createElement("label")
+    labelElement.innerHTML = label
+    container.appendChild(labelElement)
     var checkbox = document.createElement("input")
     checkbox.id = `${resourceName}ConversionCheckbox`
     checkbox.type = "checkbox"
     checkbox.checked = true
     checkbox.style.display = "inline"
-    container.appendChild(checkbox)
+    labelElement.appendChild(checkbox)
     return container
 }
 
@@ -137,8 +147,31 @@ function createControlPanel() {
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#DBA901'>catpower</span> 🡒 hunt", "catpower"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:coral'>furs</span> 🡒 <span style='color:#DF01D7'>parchment</span>", "furs"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#DF01D7'>culture</span> 🡒 <span style='color:#01A9DB'>manuscript</span>", "culture"))
-    conversionControls.appendChild(createConversionCheckbox("<span style='color:#01A9DB'>science</span> 🡒 <span style='color:#01A9DB'>compendium</span>", "science"))
-    conversionControls.appendChild(createConversionCheckbox("<span style='color:#01A9DB'>compendium</span> 🡒 <span style='color:#01A9DB'>blueprint</span>", "compendium"))
+
+    var scienceRefineContainer = document.createElement("p")
+    scienceRefineContainer.style.textAlign = "right"
+    scienceRefineContainer.innerHTML = "<span style='color:#01A9DB'>science</span> 🡒 "
+    var scienceSelect = document.createElement("select")
+    scienceSelect.id = "scienceSelect"
+    scienceSelect.style.color = "#01A9DB"
+    var compendiumOption = document.createElement("option")
+    compendiumOption.value = "compendium"
+    compendiumOption.text = "compendium"
+    compendiumOption.style.color = "#01A9DB"
+    scienceSelect.appendChild(compendiumOption)
+    var blueprintOption = document.createElement("option")
+    blueprintOption.value = "blueprint"
+    blueprintOption.text = "blueprint"
+    blueprintOption.style.color = "#01A9DB"
+    scienceSelect.appendChild(blueprintOption)
+    var idleOption = document.createElement("option")
+    idleOption.value = "disabled"
+    idleOption.text = "disabled"
+    idleOption.style.color = "#01A9DB"
+    scienceSelect.appendChild(idleOption)
+    scienceRefineContainer.appendChild(scienceSelect)
+    conversionControls.appendChild(scienceRefineContainer)
+    
     conversionControls.appendChild(createConversionCheckbox("<span style='color:gray'>faith</span> 🡒 praise", "faith"))
     panel.appendChild(conversionControls)
 
@@ -151,17 +184,29 @@ function main() {
     dispatchHunters(game)
     dispatchTraders(game, "zebras")
     praiseTheSun(game)
-    refineResourceIfMax(game, "catnip", "wood", 100)
+    refineResourceIfMax(game, "catnip", "wood")
     refineResourceIfMax(game, "wood", "beam")
     refineResourceIfMax(game, "minerals", "slab")
     refineResourceIfMax(game, "iron", "plate")
     refineResourceIfMax(game, "coal", "steel")
     refineResource(game, "furs", "parchment")
     refineResourceIfMax(game, "culture", "manuscript")
-    // This mispelling of "compendium" matches the source code in the game
-    // It must be mispelled here to work correctly.
-    refineResourceIfMax(game, "science", "compedium")
-    refineResourceIfMax(game, "science", "blueprint")
+
+    var scienceSelect = document.getElementById("scienceSelect")
+    var selectedScienceTarget = scienceSelect.options[scienceSelect.selectedIndex].value
+    if(selectedScienceTarget == "compendium") {
+        // This mispelling of "compendium" matches the source code in the game
+        // It must be mispelled here to work correctly.
+        refineResourceIfMax(game, "science", "compedium")
+    } else if (selectedScienceTarget === "blueprint") {
+        // blueprints cost 25 compendiums, so if there are fewer than that many compendiums make one of those instead
+        if(getResource(game, "compedium").value < 25) {
+            refineResourceIfMax(game, "science", "compedium")
+        } else {
+            refineResourceIfMax(game, "science", "blueprint")
+        }
+    }
+
     refineResourceIfMax(game, "titanium", "alloy")
     refineResourceIfMax(game, "oil", "kerosene")
     refineResourceIfMax(game, "uranium", "thorium")
