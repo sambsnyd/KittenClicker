@@ -3,13 +3,13 @@
 
 // Arrays reached via wrappedJSObject throw access denied exceptions if you try to call their find() method
 // This likely has something to do with how Firefox sandboxes objects accessed via wrappedJSObject
-function findIt(arr, predicate) {
+function findIt(arr, predicate, defaultWhenMissing = null) {
     for(var i = 0; i < arr.length; i++) {
         if(predicate(arr[i])) {
             return arr[i];
         }
     }
-    return null;
+    return defaultWhenMissing;
 }
 
 function getResource(game, name) {
@@ -27,18 +27,26 @@ function observeAstronomicalEvents(game) {
 function refineResourceIfMax(game, resourceName, refineTo, craftQuantity=1) {
     var resource = getResource(game, resourceName)
     var percentFull = resource.value / resource.maxValue
-    if(percentFull >= 0.99) {
+    var enabledCheckbox = document.getElementById(`${resourceName}ConversionCheckbox`)
+    var enabled = ( enabledCheckbox ? enabledCheckbox.checked : true)
+    if(percentFull >= 0.99 && enabled) {
         var craftedSuccessfully = game.workshop.craft(refineTo, craftQuantity)
     }
 }
 
 function refineResource(game, resourceName, refineTo, craftQuantity=1) {
-    game.workshop.craft(refineTo, craftQuantity)
+    var enabledCheckbox = document.getElementById(`${resourceName}ConversionCheckbox`)
+    var enabled = ( enabledCheckbox ? enabledCheckbox.checked : true)
+    if(enabled) {
+        game.workshop.craft(refineTo, craftQuantity)
+    }
 }
 
 function dispatchHunters(game) {
     var catpower = getResource(game, "catpower")
-    if(catpower.value / catpower.maxValue >= 0.99) {
+    var enabledCheckbox = document.getElementById("catpowerConversionCheckbox")
+    var enabled = ( enabledCheckbox ? enabledCheckbox.checked : true)
+    if(catpower.value / catpower.maxValue >= 0.99 && enabled) {
         game.village.huntMultiple(1)
     }
 }
@@ -51,17 +59,43 @@ function dispatchTraders(game, race) {
     }
 }
 
-// Parchment is "abundant" when there's enough that crafting a manuscript would still leave enough parchment to spend on a chapel or amphitheatre, whichever of the two is more expensive 
+// Parchment is "abundant" when there's enough that crafting a manuscript would still leave enough parchment to spend on a chapel or amphitheatre, whichever of the two is more expensive
 function refineManuscriptWhenParchmentAbundant(game) {
     var resource = getResource(game, "culture")
     var percentFull = resource.value / resource.maxValue
     if(percentFull >= 0.99) {
         var chapelParchmentCost = findIt(game.bld.getPrices("chapel"), it => it.name === "parchment").val
-        var amphitheatreParchmentCost = findIt(game.bld.getPrices("amphitheatre"), it => it.name === "parchment").val
+        // If amphitheatre has been replaced by broadcast towers, there is no assosciated parchment cost so default to 0
+        var amphitheatreParchmentCost = findIt(game.bld.getPrices("amphitheatre"), it => it.name === "parchment", {val:0}).val
         var currentParchment = getResource(game, "parchment").value
         if(currentParchment > Math.max(chapelParchmentCost,amphitheatreParchmentCost) + 25) {
             game.workshop.craft("manuscript", 1)
         }
+    }
+}
+
+function refineScience(game) {
+    var resource = getResource(game, "science")
+    var percentFull = resource.value / resource.maxValue
+    if(percentFull >= 0.99) {
+        // This mispelling of "compendium" matches the source code in the game
+        // It must be mispelled here to work correctly.
+        var compendiumCrafted = game.workshop.craft("compedium", 1)
+        // If there aren't enough manuscripts for more compendiums,
+        // maybe we've stockpiled enough compendiums to make some blueprints
+        if(!compendiumCrafted) {
+            game.workshop.craft("blueprint", 1)
+        }
+    }
+}
+
+function praiseTheSun(game) {
+    var resource = getResource(game, "faith")
+    var percentFull = resource.value / resource.maxValue
+    var enabledCheckbox = document.getElementById("faithConversionCheckbox")
+    var enabled = ( enabledCheckbox ? enabledCheckbox.checked : true)
+    if(percentFull >= 0.99 && enabled) {
+        game.religion.praise()
     }
 }
 
@@ -75,15 +109,78 @@ function restyle() {
     }
 }
 
+function createConversionCheckbox(label, resourceName) {
+    var container = document.createElement("p")
+    container.style.textAlign = "right"
+    container.innerHTML = label
+    var checkbox = document.createElement("input")
+    checkbox.id = `${resourceName}ConversionCheckbox`
+    checkbox.type = "checkbox"
+    checkbox.checked = true
+    checkbox.style.display = "inline"
+    container.appendChild(checkbox)
+    return container
+}
+
+function createControlPanel() {
+    var panel = document.createElement("div")
+    panel.id = "kittenClickerControlPanel"
+    panel.style.width = "auto"
+    panel.style.height = "auto"
+    panel.style.position = "fixed"
+    panel.style.bottom = "40px"
+    panel.style.right = "20px"
+    panel.style.border = "2px solid #00b7ff"
+    panel.style.backgroundColor = "black"
+    panel.style.color = "white"
+    panel.style.padding = "5px"
+    panel.style.fontFamily = "Roboto,sans-serif"
+
+    var heading = document.createElement("b")
+    heading.innerText = "Auto Refinement Controls ▼"
+    heading.style.cursor="pointer"
+    heading.addEventListener("click", function(){ 
+        var conversionControls = document.getElementById("conversionControls")
+        if(conversionControls.style.display === "none") {
+            heading.innerText = "Auto Refinement Controls ▼"
+            conversionControls.style.display = "block"
+        } else {
+            heading.innerText = "Auto Refinement Controls ▲"
+            conversionControls.style.display = "none"
+        }
+    })
+    panel.appendChild(heading)
+
+    var conversionControls = document.createElement("div")
+    conversionControls.id = "conversionControls"
+    conversionControls.style.width = "100%"
+
+    conversionControls.appendChild(createConversionCheckbox("catnip 🡒 wood ", "catnip"))
+    conversionControls.appendChild(createConversionCheckbox("wood 🡒 beam ", "wood"))
+    conversionControls.appendChild(createConversionCheckbox("minerals 🡒 slab ", "minerals"))
+    conversionControls.appendChild(createConversionCheckbox("coal 🡒 <span style='color:gray'>steel</span> ", "coal"))
+    conversionControls.appendChild(createConversionCheckbox("iron 🡒 plate ", "iron"))
+    conversionControls.appendChild(createConversionCheckbox("titanum 🡒 <span style='color:gray'>alloy</span> ", "titanium"))
+    conversionControls.appendChild(createConversionCheckbox("oil 🡒 kerosene ", "oil"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#4EA24E'>uranium</span> 🡒 <span style='color:#4EA24E'>thorium</span>", "uranium"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#A00000'>unobtainium</span> 🡒 <span style='color:#A00000'>eludium</span>", "unobtainium"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#DBA901'>catpower</span> 🡒 hunt", "catpower"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:coral'>furs</span> 🡒 <span style='color:#DF01D7'>parchment</span>", "furs"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#DF01D7'>culture</span> 🡒 <span style='color:#01A9DB'>manuscript</span>", "culture"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#01A9DB'>science</span> 🡒 <span style='color:#01A9DB'>compendium</span>", "science"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#01A9DB'>compendium</span> 🡒 <span style='color:#01A9DB'>blueprint</span>", "compendium"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:gray'>faith</span> 🡒 praise", "faith"))
+    panel.appendChild(conversionControls)
+
+    document.body.appendChild(panel)
+}
+
 function main() {
     var game = window.wrappedJSObject.game
-    if(game === null) {
-        // Game hasn't fully loaded yet, nothing to do
-        return
-    }
     observeAstronomicalEvents(game)
     dispatchHunters(game)
     dispatchTraders(game, "zebras")
+    praiseTheSun(game)
     refineResourceIfMax(game, "catnip", "wood", 100)
     refineResourceIfMax(game, "wood", "beam")
     refineResourceIfMax(game, "minerals", "slab")
@@ -91,16 +188,20 @@ function main() {
     refineResourceIfMax(game, "coal", "steel")
     refineResource(game, "furs", "parchment")
     refineManuscriptWhenParchmentAbundant(game)
-    // This mispelling of "compendium" matches the source code in the game
-    // It must be mispelled here to work correctly.
-    refineResourceIfMax(game, "science", "compedium")
+    refineScience(game)
     refineResourceIfMax(game, "titanium", "alloy")
     refineResourceIfMax(game, "oil", "kerosene")
-
+    refineResourceIfMax(game, "uranium", "thorium")
+    refineResourceIfMax(game, "unobtainium", "eludium")
     restyle()
 }
 
 window.onload = function() {
+    if(window.wrappedJSObject.game === null) {
+        // Game hasn't fully loaded yet, nothing to do
+        return
+    }
+    createControlPanel()
     setInterval(main, 500)
     console.log("KittenClicker loaded and running")
 }
