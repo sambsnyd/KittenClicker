@@ -55,7 +55,10 @@ function dispatchHunters(game) {
     var enabledCheckbox = document.getElementById("catpowerConversionCheckbox")
     var enabled = ( enabledCheckbox ? enabledCheckbox.checked : true)
     if(catpower.value / catpower.maxValue >= 0.99 && enabled) {
-        game.village.huntMultiple(1)
+        const hunterDispatchCost = 100
+        var catpowerPerSecond = catpower.perTickCached * ticksPerSecond
+        var huntQuantity = Math.ceil(catpowerPerSecond / hunterDispatchCost)
+        game.village.huntMultiple(huntQuantity)
     }
 }
 
@@ -64,6 +67,8 @@ function spendGold(game, desiredResource) {
     if(gold.value / gold.maxValue >= 0.99) {
         var tradingPartnerName // = game.diplomacy.get(race)
         switch(desiredResource) {
+            case "disabled":
+                return;
             case "promote kittens":
                 game.village.promoteKittens()
                 return;
@@ -183,7 +188,7 @@ function createControlPanel() {
 
     var goldSelect = document.createElement("select")
     goldSelect.id = "goldSelect"
-    var goldRefineOptions = ["promote kittens", "wood","catnip","iron","minerals","titanium","coal","uranium"]
+    var goldRefineOptions = ["disabled", "promote kittens", "wood","catnip","iron","minerals","titanium","coal","uranium"]
     for(var i in goldRefineOptions) {
         var goldOptionElement = document.createElement("option")
         goldOptionElement.value = goldRefineOptions[i]
@@ -196,7 +201,7 @@ function createControlPanel() {
 
     conversionControls.appendChild(createConversionCheckbox("oil 🡒 kerosene ", "oil"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#4EA24E'>uranium</span> 🡒 <span style='color:#4EA24E'>thorium</span>", "uranium"))
-    conversionControls.appendChild(createConversionCheckbox("<span style='color:#A00000'>unobtainium</span> 🡒 <span style='color:#A00000'>eludium</span>", "unobtainium"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#A00000'>unobtainium</span> 🡒 <span style='color:darkViolet'>eludium</span>", "unobtainium"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#DBA901'>catpower</span> 🡒 hunt", "catpower"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:coral'>furs</span> 🡒 <span style='color:#DF01D7'>parchment</span>", "furs"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#DF01D7'>culture</span> 🡒 <span style='color:#01A9DB'>manuscript</span>", "culture"))
@@ -244,7 +249,7 @@ function main() {
     refineResourceIfMax(game, "minerals", "slab")
     refineResourceIfMax(game, "iron", "plate")
     refineResourceIfMax(game, "coal", "steel")
-    refineResource(game, "furs", "parchment")
+    refineResource(game, "furs", "parchment", game.workshop.getCraftAllCount("parchment"))
     refineResourceIfMax(game, "culture", "manuscript")
 
     var scienceSelect = document.getElementById("scienceSelect")
