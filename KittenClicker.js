@@ -267,7 +267,11 @@ function main() {
         }
     }
 
-    refineResourceIfMax(game, "titanium", "alloy")
+    // Refining alloy whenever titanium is maxed will tend to consume all steel, which has other uses
+    // Particularly when trading with zebras for titanium
+    if(getResource(game, "steel").value > getResource(game, "alloy").value) {
+        refineResourceIfMax(game, "titanium", "alloy")
+    }
     refineResourceIfMax(game, "oil", "kerosene")
     refineResourceIfMax(game, "uranium", "thorium")
     refineResourceIfMax(game, "unobtainium", "eludium")
