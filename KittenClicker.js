@@ -36,9 +36,16 @@ function refineResourceIfMax(game, resourceName, refineTo) {
         // If we produce more resources in a second than are consumed by a single refinement,
         // refine one second's worth of resource production
         var refinementCost = findIt(game.workshop.getCraft(refineTo).prices, it => it.name === resourceName).val
+
         var resourcePerSecond = resource.perTickCached * ticksPerSecond
-        var craftQuantity = Math.ceil(resourcePerSecond / refinementCost)
-        var craftedSuccessfully = game.workshop.craft(refineTo, craftQuantity)
+        if(resourcePerSecond < resource.maxValue) {
+            var craftQuantity = Math.ceil(resourcePerSecond / refinementCost)
+            var craftedSuccessfully = game.workshop.craft(refineTo, craftQuantity)
+        } else {
+            // For those cases when you produce more of a resource per second than you have total storage
+            // Prevents game.workshop.craft() from failing when attempting to craft more stuff than supplies allow 
+            game.workshop.craft(refineTo, game.workshop.getCraftAllCount(refineTo))
+        }
     }
 }
 
