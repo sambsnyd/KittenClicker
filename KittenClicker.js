@@ -1,5 +1,27 @@
 // Primary purpose of this simple clicker is to prevent resources from reaching their cap and having production go to waste
 
+// game.getEffect("unicornsPerTickBase") -> 0.035 increased by 0.001 for each unicorn pasture
+// game.getEffect("unicornsGlobalRatio") -> 0.25  from upgrade?
+// game.getEffect("unicornsRatioReligion") -> 388.35 for 38.84K% bonus to unicorn production 
+// game.calcResourcePerTick("unicorns") // Compute value of unicorn production 
+// game.getResourcePerTick("unicorns") // Cached value of unicorn production 
+// Unicorn production boosting ziggurat upgrades like Ivory Towers are here:
+// game.religionTab.zgUpgradeButtons.find(it => it.id === "unicornTomb").model.prices
+
+// var alicornsPerSecond = game.resPool.resources.find(it => it.name == "alicorn").perTickCached * 5
+// var timeCrystalsPerSacrifice = this.game.getEffect("tcRefineRatio")
+// const var alicornsPerSacrifice = 25 
+
+// From calendar.js 
+/*
+ var riftChance = this.game.getEffect("riftChance");	//5 OPTK
+		if (this.game.rand(10000) < riftChance * unicornChanceRatio){
+			var unicornBonus = 500 * (1 + this.game.getEffect("unicornsRatioReligion") * 0.1);
+			this.game.msg($I("calendar.msg.rift", [this.game.getDisplayValueExt(unicornBonus)]), "notice", "unicornRift");
+
+			this.game.resPool.addResEvent("unicorns", unicornBonus);	//10% of ziggurat buildings bonus
+		}
+*/
 
 // Arrays reached via wrappedJSObject throw access denied exceptions if you try to call their find() method
 // This likely has something to do with how Firefox sandboxes objects accessed via wrappedJSObject
@@ -122,6 +144,16 @@ function praiseTheSun(game) {
     }
 }
 
+function feedNecrocornsToElders(game) {
+    var necrocorns = getResource(game, "necrocorns")
+    var elders = game.diplomacy.get("leviathans")
+    var enabledCheckbox = document.getElementById("necrocornsConversionCheckbox")
+    var enabled = ( enabledCheckbox ? enabledCheckbox.checked : true)
+    if(enabled && necrocorns.value > 0 && elders.duration > 0) {
+        game.diplomacy.feedElders()
+    }
+}
+
 function restyle() {
     var toolbarIcons = document.getElementsByClassName("toolbarIcon")
     for(var i = 0; i < toolbarIcons.length; i++) {
@@ -238,6 +270,7 @@ function createControlPanel() {
     conversionControls.appendChild(scienceRefineContainer)
 
     conversionControls.appendChild(createConversionCheckbox("<span style='color:gray'>faith</span> 🡒 praise", "faith"))
+    conversionControls.appendChild(createConversionCheckbox("<span style='color:#E00000'>necrocorns</span> 🡒 feed", "necrocorns"))
     panel.appendChild(conversionControls)
 
     document.body.appendChild(panel)
@@ -282,6 +315,7 @@ function main() {
     refineResourceIfMax(game, "oil", "kerosene")
     refineResourceIfMax(game, "uranium", "thorium")
     refineResourceIfMax(game, "unobtainium", "eludium")
+    feedNecrocornsToElders(game)
     restyle()
 }
 
