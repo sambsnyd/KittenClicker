@@ -300,7 +300,7 @@ function main() {
         refineResourceIfMax(game, "science", "compedium")
     } else if (selectedScienceTarget === "blueprint") {
         // blueprints cost 25 compendiums, so if there are fewer than that many compendiums make one of those instead
-        if(getResource(game, "compedium").value < 25) {
+        if(getResource(game, "compedium").value < getResource(game, "blueprint").value) {
             refineResourceIfMax(game, "science", "compedium")
         } else {
             refineResourceIfMax(game, "science", "blueprint")

@@ -14,5 +14,11 @@
       "matches": ["*://bloodrizer.ru/games/kittens/*"],
       "js": ["KittenClicker.js"]
     }
-  ]
+  ],
+  
+  "applications": {
+    "gecko": {
+      "id": "kittenclicker@example.com"
+    }
+  }
 }
