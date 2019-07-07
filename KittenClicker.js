@@ -164,6 +164,18 @@ function restyle() {
     }
 }
 
+function createInfoField(label, fieldName) {
+    var container = document.createElement("p")
+    container.style.textAlign = "right"
+    var labelElement = document.createElement("label")
+    labelElement.innerHTML = label
+    container.appendChild(labelElement)
+    var infoField = document.createElement("span")
+    infoField.id = fieldName
+    labelElement.appendChild(infoField)
+    return container
+}
+
 function createConversionCheckbox(label, resourceName) {
     var container = document.createElement("p")
     container.style.textAlign = "right"
@@ -268,12 +280,30 @@ function createControlPanel() {
     scienceSelect.appendChild(idleOption)
     scienceRefineContainer.appendChild(scienceSelect)
     conversionControls.appendChild(scienceRefineContainer)
-
     conversionControls.appendChild(createConversionCheckbox("<span style='color:gray'>faith</span> 🡒 praise", "faith"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#E00000'>necrocorns</span> 🡒 feed", "necrocorns"))
+    
+    conversionControls.appendChild(createInfoField("5000 <span style='color:#A00000'>unobtainium</span> trade 🡒 ", "TCTradeReturn"))
+
     panel.appendChild(conversionControls)
 
     document.body.appendChild(panel)
+}
+
+function estimateLeviathansTradeReturn(game, resourceName) {
+    var race = game.diplomacy.get("leviathans")
+    var sellResource = race.sells.findIt(it => it.name === resourceName)
+    var standingRatio = game.getEffect("standingRatio") -> 84.69999
+    if (game.prestige.getPerk("diplomacy").researched) {
+        standingRatio += 10;
+    }
+    var tradeRatio = 1 + game.diplomacy.getTradeRatio()
+    var raceRatio = (1 + 0.02 * race.energy)
+    var resourcePassedNormalTradeAmount = sellResource.chance / 100 
+    var normalizedBoughtAmount = (1 - sellResource.delta / 2) * resourcePassedNormalTradeAmount + sellResource.delta * resourcePassedNormalTradeAmount
+    var bonusTradeRatio = 1.25
+    var boughtAmount = (normalizedBoughtAmount * bonusTradeRatio) * sellResource.value * tradeRatio * raceRatio;
+    return boughtAmount
 }
 
 function main() {
@@ -316,6 +346,10 @@ function main() {
     refineResourceIfMax(game, "uranium", "thorium")
     refineResourceIfMax(game, "unobtainium", "eludium")
     feedNecrocornsToElders(game)
+    
+    var TCTradeReturnField = document.getElementById("TCTradeReturn")
+    TCTradeReturnFeild.innerText = estimateLeviathansTradeReturn(game, "timeCrystal")
+    
     restyle()
 }
 

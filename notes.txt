@@ -1,0 +1,58 @@
+starting 1592
+combust 45
+1908
+
+45 TC -> 361 TC 
+1TC -> 8 TC 
+
+game.diplomacy.getTradeRatio() -> 3.615
+getEffect('tradeRatio') -> 3.615
+game.getEffect("heatMax") -> 3500
+game.getEffect("standingRatio") -> 84.69999
+
+game.time.heat -> 0
+game.time.getCFU("ressourceRetrieval").on -> 17
+game.time.shatter(int)
+
+game.resPool.get("unobtainium").maxValue -> 2073878
+
+game.globalEffectsCached -> map of all effects 
+
+game.diplomacy.get("leviathans") -> leaviathans/elders trade info
+game.diplomacy.get("leviathans").sells.findIt(it => it.name === "timeCrystal").chance -> 98 // % chance a trade will include time crystals 
+
+
+trades with (2-2) time crystal listed returend 
+    1.60, 1.61, 1.81, 1.72, 1.57, 1.73, 1.57
+    
+// buy/sell blackcoin
+game.diplomacy.buyEcoin()
+game.diplomacy.sellEcoin()
+
+// How trading works
+var standingRatio = game.getEffect("standingRatio") -> 84.69999
+if (game.prestige.getPerk("diplomacy").researched) {
+    standingRatio += 10;
+}
+tradeRatio = 1 + game.diplomacy.getTradeRatio(),
+raceRatio = race.name === "leviathans" ? (1 + 0.02 * race.energy) : 1  // ~1.46
+resourcePassedNormalTradeAmount = this.game.math.binominalRandomInteger(normalTradeAmount, sellResource.chance / 100); // 0.98 for TC 
+var normalizedBoughtAmount = (1 - sellResource.delta / 2) * resourcePassedNormalTradeAmount + sellResource.delta * this.game.math.irwinHallRandom(resourcePassedNormalTradeAmount);
+bonusTradeRatio = 1.25 // hardcoded 
+var boughtAmount = (normalizedBoughtAmount * bonusTradeRatio) * sellResource.value * tradeRatio * raceRatio;
+
+function estimateLeviathansTradeReturn(game, resourceName) {
+    var race = game.diplomacy.get("leviathans")
+    var sellResource = race.sells.findIt(it => it.name === resourceName)
+    var standingRatio = game.getEffect("standingRatio") -> 84.69999
+    if (game.prestige.getPerk("diplomacy").researched) {
+        standingRatio += 10;
+    }
+    var tradeRatio = 1 + game.diplomacy.getTradeRatio()
+    var raceRatio = (1 + 0.02 * race.energy)
+    var resourcePassedNormalTradeAmount = sellResource.chance / 100 
+    var normalizedBoughtAmount = (1 - sellResource.delta / 2) * resourcePassedNormalTradeAmount + sellResource.delta * resourcePassedNormalTradeAmount
+    var bonusTradeRatio = 1.25
+    var boughtAmount = (normalizedBoughtAmount * bonusTradeRatio) * sellResource.value * tradeRatio * raceRatio;
+    return boughtAmount
+}
