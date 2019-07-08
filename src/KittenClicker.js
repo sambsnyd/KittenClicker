@@ -283,7 +283,7 @@ function createControlPanel() {
     conversionControls.appendChild(createConversionCheckbox("<span style='color:gray'>faith</span> 🡒 praise", "faith"))
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#E00000'>necrocorns</span> 🡒 feed", "necrocorns"))
     
-    conversionControls.appendChild(createInfoField("5000 <span style='color:#A00000'>unobtainium</span> trade 🡒 ", "TCTradeReturn"))
+    conversionControls.appendChild(createInfoField("elders trade 🡒 ", "TCTradeReturn"))
 
     panel.appendChild(conversionControls)
 
@@ -292,8 +292,8 @@ function createControlPanel() {
 
 function estimateLeviathansTradeReturn(game, resourceName) {
     var race = game.diplomacy.get("leviathans")
-    var sellResource = race.sells.findIt(it => it.name === resourceName)
-    var standingRatio = game.getEffect("standingRatio") -> 84.69999
+    var sellResource = findIt(race.sells, it => it.name === resourceName)
+    var standingRatio = game.getEffect("standingRatio")
     if (game.prestige.getPerk("diplomacy").researched) {
         standingRatio += 10;
     }
@@ -301,8 +301,8 @@ function estimateLeviathansTradeReturn(game, resourceName) {
     var raceRatio = (1 + 0.02 * race.energy)
     var resourcePassedNormalTradeAmount = sellResource.chance / 100 
     var normalizedBoughtAmount = (1 - sellResource.delta / 2) * resourcePassedNormalTradeAmount + sellResource.delta * resourcePassedNormalTradeAmount
-    var bonusTradeRatio = 1.25
-    var boughtAmount = (normalizedBoughtAmount * bonusTradeRatio) * sellResource.value * tradeRatio * raceRatio;
+
+    var boughtAmount = normalizedBoughtAmount * sellResource.value * tradeRatio * raceRatio;
     return boughtAmount
 }
 
@@ -348,7 +348,8 @@ function main() {
     feedNecrocornsToElders(game)
     
     var TCTradeReturnField = document.getElementById("TCTradeReturn")
-    TCTradeReturnFeild.innerText = estimateLeviathansTradeReturn(game, "timeCrystal")
+    var tradeReturn =estimateLeviathansTradeReturn(game, "timeCrystal")
+    TCTradeReturnField.innerHTML = `${tradeReturn.toFixed(4)} <span style='color:#14CD61'>TC</span> `
     
     restyle()
 }

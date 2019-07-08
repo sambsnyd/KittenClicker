@@ -41,18 +41,5 @@ var normalizedBoughtAmount = (1 - sellResource.delta / 2) * resourcePassedNormal
 bonusTradeRatio = 1.25 // hardcoded 
 var boughtAmount = (normalizedBoughtAmount * bonusTradeRatio) * sellResource.value * tradeRatio * raceRatio;
 
-function estimateLeviathansTradeReturn(game, resourceName) {
-    var race = game.diplomacy.get("leviathans")
-    var sellResource = race.sells.findIt(it => it.name === resourceName)
-    var standingRatio = game.getEffect("standingRatio") -> 84.69999
-    if (game.prestige.getPerk("diplomacy").researched) {
-        standingRatio += 10;
-    }
-    var tradeRatio = 1 + game.diplomacy.getTradeRatio()
-    var raceRatio = (1 + 0.02 * race.energy)
-    var resourcePassedNormalTradeAmount = sellResource.chance / 100 
-    var normalizedBoughtAmount = (1 - sellResource.delta / 2) * resourcePassedNormalTradeAmount + sellResource.delta * resourcePassedNormalTradeAmount
-    var bonusTradeRatio = 1.25
-    var boughtAmount = (normalizedBoughtAmount * bonusTradeRatio) * sellResource.value * tradeRatio * raceRatio;
-    return boughtAmount
-}
+var boughtAmount = (normalizedBoughtAmount) * sellResource.value *
+				resourceSeasonTradeRatio * tradeRatio * raceRatio;

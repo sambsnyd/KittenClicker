@@ -1,3 +1,7 @@
 web-ext-artifacts
 secrets.properties
 .gradle/
+.idea
+*.iml
+node_modules/
+build/
