@@ -284,7 +284,8 @@ function createControlPanel() {
     conversionControls.appendChild(createConversionCheckbox("<span style='color:#E00000'>necrocorns</span> 🡒 feed", "necrocorns"))
     
     conversionControls.appendChild(createInfoField("elders trade 🡒 ", "TCTradeReturn"))
-
+    conversionControls.appendChild(createInfoField("combust TC 🡒 ", "ShatterReturn"))
+    conversionControls.appendChild(createInfoField("combustion efficiency 🡒 ", "ShatterEfficiency"))
     panel.appendChild(conversionControls)
 
     document.body.appendChild(panel)
@@ -304,6 +305,15 @@ function estimateLeviathansTradeReturn(game, resourceName) {
 
     var boughtAmount = normalizedBoughtAmount * sellResource.value * tradeRatio * raceRatio;
     return boughtAmount
+}
+
+function estimateShatterReturn(game, resourceName) {
+    var cal = game.calendar
+    var ticksPerYear = cal.daysPerSeason * cal.seasonsPerYear * cal.ticksPerDay
+    var shatterTCGain = game.getEffect("shatterTCGain") * (1 + game.getEffect("rrRatio"));
+    var valueAdd = game.getResourcePerTick(resourceName, true) * ticksPerYear * shatterTCGain;
+
+    return valueAdd
 }
 
 function main() {
@@ -349,8 +359,19 @@ function main() {
     
     var TCTradeReturnField = document.getElementById("TCTradeReturn")
     var tradeReturn =estimateLeviathansTradeReturn(game, "timeCrystal")
-    TCTradeReturnField.innerHTML = `${tradeReturn.toFixed(4)} <span style='color:#14CD61'>TC</span> `
-    
+    TCTradeReturnField.innerHTML = `<span style='color:#14CD61'>${tradeReturn.toFixed(2)} TC</span> `
+
+    var ShatterReturnField = document.getElementById("ShatterReturn")
+    var shatterReturn = estimateShatterReturn(game, "unobtainium")
+    ShatterReturnField.innerHTML = `<span style='color:#A00000'>${shatterReturn.toFixed(0)} unobtainium</span>`
+
+    var ShatterEfficiencyField = document.getElementById("ShatterEfficiency")
+    var shatterEfficiency = (shatterReturn/5000)*tradeReturn
+    if(shatterEfficiency > 0) {
+        ShatterEfficiencyField.innerHTML = `<span style='color:#14CD61'>${shatterEfficiency.toFixed(2)}</span> `
+    } else {
+        ShatterEfficiencyField.innerHTML = `<span style='color:gray'>${shatterEfficiency.toFixed(2)}</span> `
+    }
     restyle()
 }
 

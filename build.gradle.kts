@@ -16,11 +16,14 @@ val webExtFile = file("node_modules/web-ext/bin/web-ext")
 
 tasks {
 
+    withType(NodeTask::class.java) {
+        dependsOn(named("npmInstall"))
+    }
+
     val assemble = register("assemble", NodeTask::class.java) {
         description = "build extension without signing"
         inputs.dir(srcDir)
         outputs.file(bundle)
-        dependsOn(named("npmInstall"))
 
         setScript(webExtFile)
         setArgs(listOf("build", "--source-dir", srcDir.absolutePath, "--artifacts-dir", artifactsDir.absolutePath, "--overwrite-dest"))
@@ -37,7 +40,6 @@ tasks {
         inputs.dir(srcDir)
         inputs.file(secretsFile)
         outputs.file(bundle)
-        dependsOn(named("npmInstall"))
 
         setScript(webExtFile)
         setArgs(listOf("sign",
@@ -49,7 +51,7 @@ tasks {
 
     val run = register("run", NodeTask::class.java) {
         setScript(webExtFile)
-        setArgs(listOf("sign",
+        setArgs(listOf("run",
                 "--source-dir", srcDir,
                 "--artifacts-dir", artifactsDir))
     }

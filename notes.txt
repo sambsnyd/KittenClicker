@@ -43,3 +43,12 @@ var boughtAmount = (normalizedBoughtAmount * bonusTradeRatio) * sellResource.val
 
 var boughtAmount = (normalizedBoughtAmount) * sellResource.value *
 				resourceSeasonTradeRatio * tradeRatio * raceRatio;
+
+
+// How shatter works
+var daysPerYear = cal.daysPerSeason * cal.seasonsPerYear;
+var remainingTicksInCurrentYear = remainingDaysInCurrentYear * cal.ticksPerDay;
+var shatterTCGain = game.getEffect("shatterTCGain") * (1 + game.getEffect("rrRatio"));
+var valueAdd = game.getResourcePerTick(resName, true) * remainingTicksInCurrentYear * shatterTCGain;
+
+if shattering only one crystal, the first year is pro-rated so days elapsed are not considered for resource gain
